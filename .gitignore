@@ -10,7 +10,9 @@ __pycache__/
 *.nii.gz
 *.npy
 *.gif
+*.h5
 
+data_example/
 example_data/
 output/
 rawdata/
@@ -43,3 +45,4 @@ output_new/
 pycode/brain_leaderboard_state_dict.pt
 pycode/mrtk/deep_recon/fastmri/brain_leaderboard_state_dict.pt
 pycode/mrtk/deep_recon/fastmri/converted.h5
+data_example/asl.h5

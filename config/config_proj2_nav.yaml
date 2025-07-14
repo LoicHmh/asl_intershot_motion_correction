@@ -134,7 +134,7 @@ motion_correction:
 
 
 joint_motion_correction:
-  flag_half_res: True
+  flag_half_res: False
   output_dir: ${base_info.output_root}/joint_moco
 
   motion_correction_inter_shot:

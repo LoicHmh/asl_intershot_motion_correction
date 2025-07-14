@@ -61,7 +61,7 @@ def run_img_recon(cfg: DictConfig, always_run=False):
             else:
                 asl.save_asl(img=img, save_path=add_suffix(save_path, '_nstc_sub_after_recon'))
     else:
-        asl.save_asl(img=img, save_path=save_path)
+        asl.save_asl(img=img, save_path=save_path, roll_and_flip=False)
 
     if cfg.recon_method == 'pogm_llr' and cfg.pogm_llr_save_intermediate:
         assert extra is not None, "extra should not be None when save_intermediate is True"
