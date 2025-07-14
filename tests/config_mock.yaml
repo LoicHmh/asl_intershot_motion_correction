@@ -1,0 +1,124 @@
+base_info:
+  raw_data_path: ""
+  scanner_nii_path: ""
+  output_root: ""
+
+  matrix_size: [114, 114, 64]
+  fov: [228, 228, 128]
+  turbo_factor: 8
+  epi_factor: 57
+  n_segments: 16
+  n_repetitions: 10                        # number of repetitions in mr4d, double number of tag/control pairs
+  flag_inner_TC_loop: True
+  samp:
+    type: "GRASE3DCAIPI"
+    R_factor: 16
+    Rz: 8
+    Ry: 2
+    Dz: 4
+    flag_echo_shift: False
+
+  nii_save:
+    perfusion_subtraction: both
+    flip: (2, )
+    roll: (0, -1, -1)
+    flag_save_magnitude_value: True
+    flag_save_phase_value: False
+    flag_tag_first: True
+
+prep_twix:
+  base_info: ${base_info}
+  output_dir: "${base_info.output_root}/prep_twix"
+  protocol: tgse
+
+  asl_path: "${prep_twix.output_dir}/mr4d.h5"
+  mr4d_n_rep: ${base_info.n_repetitions}    # number of repetitions in mr4d
+
+  flag_epi_phase_correction: True
+  mode_epi_phase_correction: "avg-volume"      # For Flex4I 0ms   # In the normal cases, single-volume is good enough. but when the BGS is strong, the signal left are perfusion signals and will not good to estimate the phase from a single scan, so an average of all image will be a better choice. Or if we have a M0 image, we can use the phase estimated from M0 and apply it to the tag/control images.
+  # mode_epi_phase_correction: "single-volume"      # For DI or FlexDI 100ms
+
+  flag_coil_compression: True
+  n_virtural_coil: 16 #16                       # 16 for better results
+  flag_external_mtx_cc: False
+  external_mtx_cc_path: null
+
+  flag_espirit: True
+  espirit_mode: "avg"                # "avg" or "first" or "external"
+  espirit_crop: 0
+  espirit_calib_width: 16
+  espirit_thresh: 0.02
+  espirit_max_iter: 100
+  espirit_kernel_width: 6
+
+  external_espirit_path: null
+  flag_save_espirit_coil_map: True
+
+  flag_clean_temp_files: False                  
+  flag_correct_inter_shot_phase_shift: False   # Should be False, unnecesary for our case because the signal is dominated by perfusion signal, so the phase shift can not be estimated correctly.
+
+
+img_recon:
+  # recon_method: cg_sense  
+  # recon_method: ifft  
+  # recon_method: ksp_check
+  # recon_method: wavelet
+  # recon_method: 2d_varnet
+  recon_method: pogm_llr
+
+  lambda_l2: 1e-3 
+  lambda_l1_wavelet: 1e-7
+  sampling_type: fullysampled
+  multiprocessing: 5
+  nii_save: ${base_info.nii_save}
+
+  input_path: ${prep_twix.mr4d_path}
+  output_dir: "${base_info.output_root}/img_recon"
+  output_prefix: "${img_recon.output_dir}/img_${img_recon.recon_method}"
+  temp_dir: "${img_recon.output_prefix}/temp"
+
+
+nav_recon:
+  n_shots: ${base_info.n_segments}
+
+  # recon_method: cg_sense  
+  # recon_method: ifft  
+  # recon_method: ksp_check
+  recon_method: wavelet
+  # recon_method: 2d_varnet
+
+  lambda_l2: 1e-3
+  lambda_l1_wavelet: 1e-7
+
+  sampling_type: undersampled
+  # sampling_type: centre
+  # sampling_type: gaussian
+
+  multiprocessing: 10 # 0 for no multiprocessing, or pereferrably same as n_repetitions
+  nii_save: ${base_info.nii_save}
+  input_path: ${prep_twix.mr4d_path}
+  output_dir: "${base_info.output_root}/nav_recon"
+  output_prefix: "${nav_recon.output_dir}/${nav_recon.sampling_type}/nav_${nav_recon.recon_method}"
+  temp_dir: "${nav_recon.output_prefix}/temp"
+
+
+motion_estimation:
+  method: mcflirt
+  mr4d_path: ${prep_twix.mr4d_path}
+  input_path: "${nav_recon.output_prefix}.nii.gz"
+  output_dir: "${nav_recon.output_prefix}/motion_est_${motion_estimation.method}"
+  registration_reference_img_path: null
+
+
+motion_correction:
+  multiprocessing: 8
+  recon_method: mcSENSE   # mcSENSE, NUSENSE
+  motion_estimation: ${motion_estimation}
+  mr4d_mot_path: ${prep_twix.mr4d_path}
+  n_rep: ${prep_twix.mr4d_n_rep}
+  output_dir: "${motion_estimation.output_dir}/moco_${motion_correction.recon_method}"
+  intermediate_dir: "${motion_correction.output_dir}/temp"
+  motion_params: ${motion_estimation.output_dir}/motion_par.npy  # Only for mcSENSE and NUSENSE
+
+  output_prefix: "${motion_correction.output_dir}/img_moco"
+  nii_save: ${base_info.nii_save}

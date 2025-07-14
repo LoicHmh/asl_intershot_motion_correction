@@ -1,0 +1,45 @@
+.DS_Store
+.ipynb_checkpoints/
+__pycache__/
+
+*.zip
+*.mat
+*.pkg
+*.asv
+*.nii
+*.nii.gz
+*.npy
+*.gif
+
+example_data/
+output/
+rawdata/
+
+matlab_code/capria_tools-main/
+matlab_code/Multishot-EPI/data/
+
+doc/project reports/project report/report.aux
+doc/project reports/project report/report.log
+doc/project reports/project report/report.synctex.gz
+
+doc/ICE_code/
+output_archive/
+doc/ConfidentialMaterial_ICE_Workshop.pdf
+pycode/minitests/out/
+outputs/
+output_old/
+
+pycode/temp/
+pycode/unittest/test_data
+pycode/mrtk/deep_recon/stanford_cars/
+pycode/fig_inter_volume_motion_simulation/
+pycode/figs_20241024_CAIPI1x4_outer_loop/
+pycode/fig_conv_readout_ksp/
+
+pycode/temp_gfactor/
+pycode/temp_outputs/
+pycode/mrtk/deep_recon/fastmri_models/input_dir/
+output_new/
+pycode/brain_leaderboard_state_dict.pt
+pycode/mrtk/deep_recon/fastmri/brain_leaderboard_state_dict.pt
+pycode/mrtk/deep_recon/fastmri/converted.h5
