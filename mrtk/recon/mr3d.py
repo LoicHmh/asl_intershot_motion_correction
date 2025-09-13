@@ -20,7 +20,7 @@ def _recon_img_wrapper(args):
 def _recon_img(ksp: npt.NDArray[np.complex128], 
                 sampling_mask: np.ndarray,
                 sensitivity_maps: npt.NDArray[np.complex128],
-                recon_method: Literal['rss_ifft', 'cg_sense', 'cg_sense_scipy', 'wavelet', 'pogm_llr', 'ksp_check'], 
+                recon_method: Literal['rss_ifft', 'cg_sense', 'cg_sense_scipy', 'wavelet', 'ksp_check'], 
                 **kwargs) -> dict[str, np.ndarray]:
     binary_sampling_mask = sampling_mask > 0
     if recon_method == 'rss_ifft':
@@ -72,46 +72,6 @@ def _recon_img(ksp: npt.NDArray[np.complex128],
                 lamda=lambda_l1_wavelet,
                 show_pbar=False).run()
         res = {'recon': img}
-        
-    elif recon_method == 'pogm_llr':
-        lambda_pogm_llr = kwargs.get('pogm_llr_lambda', 1e-2)
-        maxiter = kwargs.get('pogm_llr_maxiter', 200)
-        patch_size = kwargs.get('pogm_llr_patch_size', (7, 7, 7))
-        save_intermediate = kwargs.get('pogm_llr_save_intermediate', False)
-        sub_before_recon = kwargs.get('pogm_llr_sub_before_recon', False)
-        separate_tc = kwargs.get('separate_tc', False)
-
-        if sub_before_recon:
-            ksp_sub = ksp[..., 1::2] - ksp[..., 0::2]
-            
-            # To reconstruct the tag and control images separately
-            sense_op = SenseOP(sampling_mask=binary_sampling_mask[..., 0::2],
-                                sensitivity_maps=sensitivity_maps,
-                                ksp_size=ksp_sub.shape)
-            img, extra = sense_op.run_pogm_llr(ksp=ksp_sub, lambda_pogm_llr=lambda_pogm_llr, maxiter=maxiter, patch_size=patch_size, save_intermediate=save_intermediate)
-        else:
-            if separate_tc:
-                ksp_size = list(ksp.shape)
-                ksp_size[-1] = ksp_size[-1] // 2
-                ksp_size = tuple(ksp_size)
-
-                # To reconstruct the tag and control images separately
-                img = np.zeros(ksp.shape[1:5], dtype=np.complex128)
-                for ts in range(2):
-                    ksp_ts = ksp[..., ts::2]
-                    sense_op = SenseOP(sampling_mask=binary_sampling_mask[..., ts::2],
-                                    sensitivity_maps=sensitivity_maps,
-                                    ksp_size=ksp_ts.shape)
-
-                    img[..., ts::2], extra = sense_op.run_pogm_llr(ksp=ksp_ts, lambda_pogm_llr=lambda_pogm_llr, maxiter=maxiter, patch_size=patch_size, save_intermediate=save_intermediate)
-
-            else:
-                img = np.zeros(ksp.shape[1:5], dtype=np.complex128)
-                sense_op = SenseOP(sampling_mask=binary_sampling_mask,
-                                    sensitivity_maps=sensitivity_maps,
-                                    ksp_size=ksp.shape)
-                img, extra = sense_op.run_pogm_llr(ksp=ksp, lambda_pogm_llr=lambda_pogm_llr, maxiter=maxiter, patch_size=patch_size, save_intermediate=save_intermediate)
-        res = {'recon': img, 'extra': extra}
     
     elif recon_method == 'mc_sense':
         rigid_transforms = kwargs.get('rigid_transforms', None)

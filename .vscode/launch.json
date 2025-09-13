@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        }
+        ,
+        {
+            "name": "Run main.py (ASL GRASE3D)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--twix-path", "${workspaceFolder}/test_data/data/meas_MID00055_FID34854_mh_jw_tgse_VEPCASL_traj4tc_rs.dat",
+                "--output-root", "${workspaceFolder}/test_data/output/meas_MID00055_FID34854_mh_jw_tgse_VEPCASL_traj4tc_rs",
+                "--scanner-nii", "${workspaceFolder}/test_data/data/images_017_mh_jw_tgse_VEPCASL_traj4tc_rs.nii",
+                "--caipi-style", "caipi1x4",
+                "--config", "${workspaceFolder}/config/config.yaml"
+            ],
+            "env": {
+            },
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true
+        }
+    ]
+}

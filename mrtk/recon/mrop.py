@@ -4,7 +4,6 @@ import numpy.typing as npt
 from ..math.fft_utils import fftnd, ifftnd
 import scipy.sparse
 from scipy.sparse.linalg import LinearOperator
-from .locally_low_rank import pogm_LLR
 from ..math.rigid_transform import RigidTransform, build_trilinear_interpolation_matrix, SincRigidTransformOP
 from typing import List, Literal, Optional
 
@@ -350,33 +349,6 @@ class SenseOP(MROP):
         img = np.sqrt(np.sum(np.abs(img) ** 2, axis=0))
         img = img.reshape((self.Nx, self.Ny, self.Nz, self.Nt))
         return img
-
-    def run_pogm_llr(self, ksp: npt.NDArray[np.complex128], lambda_pogm_llr: float = 1e-1, maxiter: int = 200, patch_size: tuple[float] = (15, 15, 15), save_intermediate: bool = False) -> npt.NDArray[np.complex128]:
-        """
-        Perform SENSE reconstruction using POGM with LLR.
-
-        Args:
-            ksp: Input k-space data
-            lambda_pogm_llr: L2 regularization parameter
-            maxiter: Number of iterations
-            atol: Tolerance for convergence
-
-        Returns:
-            Reconstructed image
-        """
-        if self.Nt == 1:
-            print(f"Warning: You are using Locally Low Rank with only Nt = 1")
-
-        assert np.all(ksp.shape == self.ksp_size), \
-            f"ksp shape {ksp.shape} does not match ksp_size {self.ksp_size}"
-
-        ksp = ksp.reshape(self.flattened_ksp_size)
-        masked_ksp = self.A(ksp)
-        
-        dd = self.adj(masked_ksp)
-        im_size = (self.Nx, self.Ny, self.Nz, self.Nt)
-        img, extra = pogm_LLR(self, dd, lam=lambda_pogm_llr, patch_size=patch_size, im_size=im_size, niter=maxiter, save_intermediate=save_intermediate)
-        return img, extra
     
 
 class MotionCompensatedSenseOP(SenseOP):

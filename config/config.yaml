@@ -3,20 +3,14 @@ base_info:
   output_root: ""
   scanner_nii: ""
 
-  matrix_size: [114, 114, 64]
-  fov: [228, 228, 128]
-  spacing: [2, 2, 2]
-  turbo_factor: 8
-  epi_factor: 57
-  n_segments: 16
-  n_rep: 10                        # number of repetitions in mr4d, double number of tag/control pairs
+  matrix_size: [64, 64, 32]
+  spacing: [3.6, 3.6, 3.6]
+  n_segments: 4
+  n_rep: 14                        # number of repetitions in mr4d, double number of tag/control pairs
   flag_inner_TC_loop: True
   
   samp_type: GRASE3DCAIPI
-  R_factor: 16
-  Rz: 8
-  Ry: 2
-  Dz: 4
+  R_factor: ${base_info.n_segments}
   flag_echo_shift: False
 
   flag_tag_first: True
@@ -63,21 +57,8 @@ prep_twix:
 
 img_recon:
   n_rep: ${base_info.n_rep}  # number of repetitions in mr4d, double number of tag/control pairs
-  recon_method: cg_sense  
-  # recon_method: rss_ifft  
-  # recon_method: ksp_check
-  # recon_method: wavelet
-  # recon_method: pogm_llr
-  
+  recon_method: cg_sense    
   lambda_l2: 1e-3 
-  lambda_l1_wavelet: 1e-7
-  pogm_llr_lambda: 9e-5
-  pogm_llr_maxiter: 200
-  pogm_llr_patch_size: [7, 7, 7]
-  pogm_llr_save_intermediate: True
-  pogm_llr_sub_before_recon: True
-  pogm_llr_separate_tc: True
-
   input_path: ${prep_twix.asl_path}
   output_dir: ${base_info.output_root}/img_recon_${img_recon.recon_method}
   output_path: ${img_recon.output_dir}/img.nii.gz
@@ -85,20 +66,9 @@ img_recon:
 
 
 nav_recon:
-  # recon_method: cg_sense  
-  # recon_method: rss_ifft  
-  # recon_method: ksp_check
-  # recon_method: wavelet
-  # recon_method: pogm_llr
-
+  recon_method: cg_sense  
   n_shots: ${base_info.n_segments}  # number of shots in the k-space
   lambda_l2: 1e-3
-  lambda_l1_wavelet: 1e-7
-
-  # recon_method: c4f8_cc_asl_randrt_iter38800
-  # recon_method: c4f8_cc_asl_randrt_intaug_iter48800
-  # recon_method: c4f8_cc_asl_randrt_ft_asl2_100ms_iter39850
-  recon_method: c4f8_cc_asl_randrt_ft_asl2_100ms_randrt_iter44999
 
   multiprocessing: 6 # 0 for no multiprocessing, or pereferrably same as n_repetitions
   input_path: ${prep_twix.asl_path}
@@ -111,8 +81,7 @@ motion_estimation:
   method: mcflirt
   asl_path: ${prep_twix.asl_path}
   input_path: ${nav_recon.output_path}
-  spacing: [2, 2, 2]
-  # spacing: [3.6, 3.6, 3.6]
+  spacing: [3.6, 3.6, 3.6]
   output_dir: ${nav_recon.output_dir}/motion_est_${motion_estimation.method}
   output_path: ${motion_estimation.output_dir}/motion_par.npy
 
@@ -129,36 +98,5 @@ motion_correction:
   n_rep: ${base_info.n_rep}
   n_segments: ${base_info.n_segments}
   output_dir: ${motion_estimation.output_dir}/moco_${motion_correction.recon_method}
-  motion_params: ${motion_estimation.output_dir}/motion_par.npy  # Only for mcSENSE and NUSENSE
+  motion_params: ${motion_estimation.output_dir}/motion_par.npy
   output_path: ${motion_correction.output_dir}/img_moco.nii.gz
-
-
-joint_motion_correction:
-  flag_half_res: False
-  output_dir: ${base_info.output_root}/joint_moco
-
-  motion_correction_inter_shot:
-    asl_path: ${prep_twix.asl_path}
-    output_dir: ${joint_motion_correction.output_dir}/moco_alignedSENSE_inter_shot
-    temp_dir: ${joint_motion_correction.motion_correction_inter_shot.output_dir}/temp
-    motion_params: ${joint_motion_correction.motion_correction_inter_shot.output_dir}/motion_par_inter_shot.npy
-    output_path: ${joint_motion_correction.motion_correction_inter_shot.output_dir}/img_moco_inter_shot.nii.gz
-    multiprocessing: 6
-
-  motion_estimation_inter_volume:
-    input_path: ${joint_motion_correction.motion_correction_inter_shot.output_path}
-    output_dir: ${joint_motion_correction.output_dir}/moco_mcflirt_inter_volume
-    motion_params: ${joint_motion_correction.motion_estimation_inter_volume.output_dir}/motion_par_inter_volume.npy
-
-  motion_correction_combined:
-    output_dir: ${joint_motion_correction.output_dir}/moco_combined
-    motion_params: ${joint_motion_correction.motion_correction_combined.output_dir}/motion_par_combined.npy
-    
-    asl_path: ${prep_twix.asl_path}
-    multiprocessing: 2
-    recon_method: mc_sense   
-    mc_interpolation_method: sinc
-    mc_maxiter: 500
-    mc_atol: 1e-12
-
-    output_path: ${joint_motion_correction.motion_correction_combined.output_dir}/img_moco_combined.nii.gz
