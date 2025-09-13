@@ -1,6 +1,6 @@
-# ASL Inter‑shot Motion Correction for Segmented 3D‑GRASE (CAIPI)
+# Inter-shot Motion Correction of Segmented 3D-GRASE ASL Perfusion Imaging with Self-Navigation and CAIPI
 
-This repository contains a complete reference implementation of a retrospective, self‑navigated inter‑shot motion correction method for segmented 3D‑GRASE ASL imaging with CAIPI sampling. It reconstructs per‑shot self‑navigators, estimates rigid motion, and integrates those estimates in a motion‑compensated SENSE forward model for final ASL image reconstruction.
+This repository contains a complete reference implementation of the proposed method in paper "Inter-shot Motion Correction of Segmented 3D-GRASE ASL Perfusion Imaging with Self-Navigation and CAIPI". It reconstructs per‑shot self‑navigators, estimates rigid motion, and integrates those estimates in a motion‑compensated SENSE forward model for final ASL image reconstruction.
 
 ## Installation
 Recommended: use Conda for Python ≥3.11.7.
