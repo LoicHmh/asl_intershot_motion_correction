@@ -11,7 +11,7 @@ __pycache__/
 *.npy
 *.gif
 *.h5
-
+.env
 
 test_data/
 REORG_PLAN.md

@@ -78,8 +78,10 @@ def mc_sense_op_fixture():
     ksp_size = (Nc, Nx, Ny, Nz, Nt)
     sampling_mask = np.ones((1, 1, Ny, Nz, Nt), dtype=np.bool_)  # Fully sampled mask
     sensitivity_maps = np.random.randn(Nc, Nx, Ny, Nz) + 1j * np.random.randn(Nc, Nx, Ny, Nz)  # Random sensitivity maps
-    rigid_transforms = [RigidTransform(par_degree=(1, 2, 3, 4, 5, 6)),
-                        RigidTransform(par_degree=(-2, -3, -4, -5, -6, -7))]
+    rigid_transforms = [
+        RigidTransform(par=[1, 2, 3, 4, 5, 6], is_radian=False),
+        RigidTransform(par=[-2, -3, -4, -5, -6, -7], is_radian=False),
+    ]
     return MotionCompensatedSenseOP(sampling_mask=sampling_mask, sensitivity_maps=sensitivity_maps, rigid_transforms=rigid_transforms, ksp_size=ksp_size)
 
 def test_mcsense_fwd(mc_sense_op_fixture):

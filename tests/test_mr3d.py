@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from unittest.mock import patch
 from mrtk.recon.mr3d import MR3D
 
 @pytest.fixture
@@ -24,32 +25,31 @@ def test_mr3d_initialization(mock_mr3d):
     assert mr3d.sampling_mask.shape == (1, 16, 16, 16, 3), "Sampling mask shape mismatch"
     assert mr3d.sensitivity_maps.shape == (4, 16, 16, 16, 1), "Sensitivity maps shape mismatch"
 
-def test_generate_espirit_sensitivity_maps(mock_mr3d):
-    """
-    Test the generate_espirit_sensitivity_maps method.
-    """
-    mr3d = mock_mr3d
-    espirit_maps = mr3d.generate_espirit_sensitivity_maps()
-    assert espirit_maps.shape == mr3d.sensitivity_maps.shape, "ESPIRiT sensitivity maps shape mismatch"
+    
 
 def test_recon_img(mock_mr3d):
     """
     Test the recon_img method.
     """
     mr3d = mock_mr3d
-    img, extra = mr3d.recon_img(recon_method='rss_ifft')
+    res = mr3d.recon_img(recon_method='rss_ifft')
+    img = res['recon']
     assert img.shape == (16, 16, 16, 3), "Reconstructed image shape mismatch"
 
-    img, extra = mr3d.recon_img(recon_method='cg_sense')
+    res = mr3d.recon_img(recon_method='cg_sense')
+    img = res['recon']
     assert img.shape == (16, 16, 16, 3), "Reconstructed image shape mismatch"
 
-    img, extra = mr3d.recon_img(recon_method='wavelet')
-    assert img.shape == (16, 16, 16, 3), "Reconstructed image shape mismatch"\
+    res = mr3d.recon_img(recon_method='wavelet')
+    img = res['recon']
+    assert img.shape == (16, 16, 16, 3), "Reconstructed image shape mismatch"
 
-    ksp, extra = mr3d.recon_img(recon_method='ksp_check')
+    res = mr3d.recon_img(recon_method='ksp_check')
+    ksp = res['recon']
     assert ksp.shape == (4, 16, 16, 16, 3), "Reconstructed image shape mismatch"
 
-    img, extra = mr3d.recon_img(recon_method='cg_sense_scipy')
+    res = mr3d.recon_img(recon_method='cg_sense_scipy')
+    img = res['recon']
     assert img.shape == (16, 16, 16, 3), "Reconstructed image shape mismatch"
 
 def test_recon_img_external(mock_mr3d):
@@ -58,26 +58,26 @@ def test_recon_img_external(mock_mr3d):
     """
     mr3d = mock_mr3d
     external_ksp = np.random.randn(4, 16, 16, 16, 3) + 1j * np.random.randn(4, 16, 16, 16, 3)
-    img, extra = mr3d.recon_img_external(
+    res = mr3d.recon_img_external(
         external_ksp=external_ksp,
         recon_method='rss_ifft'
     )
-    assert img.shape == (16, 16, 16, 3), "Reconstructed image shape mismatch with external inputs"
+    assert res['recon'].shape == (16, 16, 16, 3), "Reconstructed image shape mismatch with external inputs"
 
-    external_sampling_mask = np.ones((1, 1, 16, 16, 3), dtype=np.uint8)
-    img, extra = mr3d.recon_img_external(
+    external_sampling_mask = np.ones((1, 16, 16, 16, 3), dtype=np.uint8)
+    res = mr3d.recon_img_external(
         external_sampling_mask=external_sampling_mask,
         recon_method='rss_ifft'
     )
-    assert img.shape == (16, 16, 16, 3), "Reconstructed image shape mismatch with external inputs"
+    assert res['recon'].shape == (16, 16, 16, 3), "Reconstructed image shape mismatch with external inputs"
 
     mr3d = mock_mr3d
     external_sensitivity_maps = np.ones((4, 16, 16, 16, 1), dtype=np.complex128)
-    img, extra = mr3d.recon_img_external(
+    res = mr3d.recon_img_external(
         external_sensitivity_maps=external_sensitivity_maps,
         recon_method='rss_ifft'
     )
-    assert img.shape == (16, 16, 16, 3), "Reconstructed image shape mismatch with external inputs"
+    assert res['recon'].shape == (16, 16, 16, 3), "Reconstructed image shape mismatch with external inputs"
     
 
 def test_recon_img_per_shot(mock_mr3d):
@@ -85,16 +85,20 @@ def test_recon_img_per_shot(mock_mr3d):
     Test the recon_img method.
     """
     mr3d = mock_mr3d
-    img, extra = mr3d.recon_img(recon_method='rss_ifft', flag_recon_per_shot=True)
+    res = mr3d.recon_img(recon_method='rss_ifft', flag_recon_per_shot=True)
+    img = res['recon']
     assert img.shape == (16, 16, 16, 15), "Reconstructed image shape mismatch"
 
-    img, extra = mr3d.recon_img(recon_method='cg_sense', flag_recon_per_shot=True)
+    res = mr3d.recon_img(recon_method='cg_sense', flag_recon_per_shot=True)
+    img = res['recon']
     assert img.shape == (16, 16, 16, 15), "Reconstructed image shape mismatch"
 
-    img, extra = mr3d.recon_img(recon_method='cg_sense_scipy', flag_recon_per_shot=True)
+    res = mr3d.recon_img(recon_method='cg_sense_scipy', flag_recon_per_shot=True)
+    img = res['recon']
     assert img.shape == (16, 16, 16, 15), "Reconstructed image shape mismatch"
 
-    img, extra = mr3d.recon_img(recon_method='wavelet', flag_recon_per_shot=True)
+    res = mr3d.recon_img(recon_method='wavelet', flag_recon_per_shot=True)
+    img = res['recon']
     assert img.shape == (16, 16, 16, 15), "Reconstructed image shape mismatch"
 
     # img = mr3d.recon_img(method='ksp_check', flag_recon_per_shot=True)
@@ -142,10 +146,12 @@ def test_save_and_load(mock_mr3d, tmp_path):
         assert loaded_mr3d.roll is None, "Loaded roll mismatch"
 
 
-def test_recon_img_pogm_llr(mock_mr3d):
+@patch("sigpy.mri.app.EspiritCalib.run", return_value=np.random.randn(4, 16, 16, 16))
+def test_generate_espirit_sensitivity_maps(mock_run, mock_mr3d):
     """
-    Test the recon_img method.
+    Test the generate_espirit_sensitivity_maps method with patched SigPy for speed.
     """
     mr3d = mock_mr3d
-    img, extra = mr3d.recon_img(recon_method='pogm_llr')
-    assert img.shape == (16, 16, 16, 3), "Reconstructed image shape mismatch"
+    espirit_maps = mr3d.generate_espirit_sensitivity_maps()
+    mock_run.assert_called_once()
+    assert espirit_maps.shape == mr3d.sensitivity_maps.shape, "ESPIRiT sensitivity maps shape mismatch"

@@ -8,14 +8,14 @@ def mock_rigid_transform():
     Fixture to create a mock RigidTransform instance.
     """
     par_degree = [30, 45, 60, 10, 20, 30]  # Rotation (degrees) and translation
-    return RigidTransform(par_degree=par_degree)
+    return RigidTransform(par=par_degree, is_radian=False)
 
 def test_rigid_transform_initialization_with_parameters():
     """
     Test initialization of RigidTransform with rotation and translation parameters.
     """
     par_degree = [30, 45, 60, 10, 20, 30]  # Rotation (degrees) and translation
-    rt = RigidTransform(par_degree=par_degree)
+    rt = RigidTransform(par=par_degree, is_radian=False)
 
     # Check that the transformation matrix is created
     assert rt.mtx.shape == (4, 4), "Transformation matrix shape is incorrect"
@@ -54,14 +54,13 @@ def test_get_par_radian(mock_rigid_transform):
     assert np.isclose(par_radian[0], np.radians(30), atol=1e-2), "Rotation parameter (rx) is incorrect"
     assert np.isclose(par_radian[3], 10, atol=1e-2), "Translation parameter (tx) is incorrect"
 
-def test_change_rotation_center(mock_rigid_transform):
+def test_rotation_center_effect(mock_rigid_transform):
     """
-    Test changing the rotation center of the RigidTransform.
+    Changing the rotation center should affect the resulting transform when rotation is non-zero.
     """
-    rt = mock_rigid_transform
-    new_center = [5, 5, 5]
-    rt_new = rt.change_rotation_center(new_center)
-
+    par_degree = [30, 45, 60, 10, 20, 30]
+    rt = RigidTransform(par=par_degree, is_radian=False, rotation_center=[0, 0, 0])
+    rt_new = RigidTransform(par=par_degree, is_radian=False, rotation_center=[5, 5, 5])
     # Check that the new transformation matrix is different
     assert not np.allclose(rt.mtx, rt_new.mtx), "Rotation center change did not affect the transformation matrix"
 
@@ -105,13 +104,12 @@ def test_invalid_initialization():
     with pytest.raises(AssertionError, match=""):
         RigidTransform()
 
-def test_change_rotation_center_identity():
+def test_rotation_center_no_effect_for_identity():
     """
-    Test changing the rotation center with an identity matrix.
+    With zero rotation and translation, different rotation centers should not change the identity transform.
     """
-    rt = RigidTransform(mtx=np.eye(4))
-    new_center = [5, 5, 5]
-    rt_new = rt.change_rotation_center(new_center)
-
-    # Check that the new transformation matrix is still valid
-    assert rt_new.mtx.shape == (4, 4), "Transformation matrix shape is incorrect after changing rotation center"
+    par_zero = [0, 0, 0, 0, 0, 0]
+    rt = RigidTransform(par=par_zero, is_radian=False, rotation_center=[0, 0, 0])
+    rt_new = RigidTransform(par=par_zero, is_radian=False, rotation_center=[5, 5, 5])
+    assert np.allclose(rt.mtx, np.eye(4)), "Expected identity transform"
+    assert np.allclose(rt_new.mtx, np.eye(4)), "Expected identity transform irrespective of rotation center"
